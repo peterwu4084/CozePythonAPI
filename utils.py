@@ -1,6 +1,7 @@
 import json
 
 import requests
+
 from constants import COZE_URL
 
 
@@ -29,20 +30,35 @@ def make_data(query, bot_id, user_id):
     return data
 
 
-def post(query, api, bot_id, user_id, url=COZE_URL):
-    import pdb; pdb.set_trace()
+def chat(query, api, bot_id, user_id, url=COZE_URL):
     headers = make_headers(api)
     data = make_data(query, bot_id, user_id)
     response = requests.post(url, headers=headers, json=data)
-    import pdb; pdb.set_trace()
-    print()
-    # for line in response.iter_lines():
-    #     if line:
-    #         decoded_line = line.decode('utf-8')
-    #         json_data = json.loads(decoded_line.split("data:")[-1])
+    if response.status_code != 200:
+        content= dict(reason=response.reason, status_code=response.status_code)
+    else:
+        content = json.loads(response.content)
+        content['status_code'] = response.status_code
+    return content
 
-    #         if json_data['event'] == 'done':
-    #             break
-    #         else:
-    #             if json_data['message']['type'] == 'answer':
-    #                 yield json_data['message']['content']
+
+def get_chat_info(chat_id, conversation_id, api, url=COZE_URL):
+    headers = make_headers(api)
+    response = requests.get(f'{url}/retrieve?chat_id={chat_id}&conversation_id={conversation_id}', headers=headers)
+    if response.status_code != 200:
+        content= dict(reason=response.reason, status_code=response.status_code)
+    else:
+        content = json.loads(response.content)
+        content['status_code'] = response.status_code
+    return content
+
+
+def get_chat_msg(chat_id, conversation_id, api, url=COZE_URL):
+    headers = make_headers(api)
+    response = requests.post(f'{url}/message/list?chat_id={chat_id}&conversation_id={conversation_id}', headers=headers)
+    if response.status_code != 200:
+        content= dict(reason=response.reason, status_code=response.status_code)
+    else:
+        content = json.loads(response.content)
+        content['status_code'] = response.status_code
+    return content
